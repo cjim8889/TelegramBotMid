@@ -6,6 +6,9 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Newtonsoft.Json;
 using TelegramMid.Models;
+using TelegramMid.Context;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace TelegramMid
 {
@@ -20,38 +23,46 @@ namespace TelegramMid
 
             var configuration = builder.Build();
 
-            var factory = new ConnectionFactory();
-            factory.Uri = new Uri(configuration.GetSection("Mq:ConnectionString").Value);
+            var mqContext = new MqContext(configuration);
+            var telegramContext = new TelegramContext(configuration);
 
-            var connection = factory.CreateConnection();
-            var channel = connection.CreateModel();
+            var consumer = new EventingBasicConsumer(mqContext.Channel);
 
-            channel.QueueDeclare(queue: "test",
-                                 durable: false,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
 
-            var consumer = new EventingBasicConsumer(channel);
+            telegramContext.RegisterCommand("wocao", Program.testCommand);
 
-            consumer.Received += (model, ea) =>
+
+            consumer.Received += async (model, ea) =>
             {
                 var body = ea.Body;
                 var message = Encoding.UTF8.GetString(body);
 
-                var type = new { article = Article.Empty};
-                var messageObj = JsonConvert.DeserializeAnonymousType(message, type);
 
 
+                var messageObj = JsonConvert.DeserializeObject<MqMessage>(message);
 
+                //await telegramContext.SendMessage(tgMessage, 883936683);
 
-                Console.WriteLine(" [x] Received {0}", messageObj.article.Title);
 
             };
 
 
+            var task = Task.Run(() => mqContext.Channel.BasicConsume(queue: "test", autoAck: true, consumer: consumer));
+            var tgtask = Task.Run(() => {
 
-            channel.BasicConsume(queue: "test", autoAck: true, consumer: consumer);
+                telegramContext.TelegramBotClient.StartReceiving();
+                Thread.Sleep(int.MaxValue);
+
+            });
+
+
+            Console.WriteLine("Hello");
+            
+        }
+
+        public static string testCommand()
+        {
+            return "this is a test command";
         }
     }
 }

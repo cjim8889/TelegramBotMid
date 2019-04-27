@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Args;
+using Telegram.Bot.Exceptions;
 
 namespace TelegramMid.Context
 {
@@ -12,17 +13,12 @@ namespace TelegramMid.Context
     {
 
 
-        private readonly Dictionary<string, Func<string[], string>> commandTable;
+        private readonly Dictionary<string, Func<string[], long, string>> commandTable;
 
         public TelegramContext(IConfiguration configuration)
         {
             TelegramBotClient = new TelegramBotClient(configuration.GetSection("Telegram:Token").Value);
-
-
-
-
-            commandTable = new Dictionary<string, Func<string[], string>>();
-
+            commandTable = new Dictionary<string, Func<string[], long, string>>();
             TelegramBotClient.OnMessage += Bot_OnMessage;
         }
 
@@ -40,8 +36,7 @@ namespace TelegramMid.Context
                 var messageText = e.Message.Text;
                 var chatId = e.Message.Chat.Id;
 
-                Console.WriteLine($"Received message from {e.Message.From.FirstName} {e.Message.Chat.InviteLink}");
-
+                Console.WriteLine($"Received message from {e.Message.From.FirstName} {e.Message.From.LastName}");
 
                 if (messageText.StartsWith('/'))
                 {
@@ -69,12 +64,12 @@ namespace TelegramMid.Context
                 return;
             }
 
-            string returnMessageText = commandTable.GetValueOrDefault(command)(arguments);
+            string returnMessageText = commandTable.GetValueOrDefault(command)(arguments, chatId);
             await SendMessage(returnMessageText, chatId);
 
         }
 
-        public void RegisterCommand(string command, Func<string[], string> func)
+        public void RegisterCommand(string command, Func<string[], long, string> func)
         {
             if (!commandTable.ContainsKey(command))
             {
@@ -84,11 +79,21 @@ namespace TelegramMid.Context
 
         public async Task SendMessage(String message, long chatId)
         {
-            await TelegramBotClient.SendTextMessageAsync(
+            try
+            {
+                await TelegramBotClient.SendTextMessageAsync(
                   chatId: chatId,
                   text: message
-            );
+                );
+
+                Console.WriteLine($"Message Sent {chatId}");
+            }
+            catch(ChatNotFoundException e)
+            {
+                Console.WriteLine($"Fail to find the chatId {chatId}");
+            }           
         }
 
+        
     }
 }

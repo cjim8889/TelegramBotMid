@@ -12,7 +12,7 @@ namespace TelegramMid.Context
     {
 
 
-        private readonly Dictionary<string, Func<string>> commandTable;
+        private readonly Dictionary<string, Func<string[], string>> commandTable;
 
         public TelegramContext(IConfiguration configuration)
         {
@@ -21,7 +21,7 @@ namespace TelegramMid.Context
 
 
 
-            commandTable = new Dictionary<string, Func<string>>();
+            commandTable = new Dictionary<string, Func<string[], string>>();
 
             TelegramBotClient.OnMessage += Bot_OnMessage;
         }
@@ -45,27 +45,36 @@ namespace TelegramMid.Context
 
                 if (messageText.StartsWith('/'))
                 {
-                    await CommandHandler(messageText.Substring(1), chatId);
+                    var messageBody = messageText.Substring(1);
+                    var messageSplit = messageBody.Split(' ', 2);
+                    if (messageSplit.Length > 1)
+                    {
+                        await CommandHandler(messageSplit[0], messageSplit[1].Split(' '), chatId);
+                    }
+                    else
+                    {
+                        await CommandHandler(messageSplit[0], null, chatId);
+                    }
                 }
             }
         }
 
-        private async Task CommandHandler(string command, long chatId)
+        private async Task CommandHandler(string command, string[] arguments, long chatId)
         {
 
-            //Currently cannot handle arguments  
           
             if (!commandTable.ContainsKey(command))
             {
+                await SendMessage("Unsupported Command", chatId);
                 return;
             }
 
-            string returnMessageText = commandTable.GetValueOrDefault(command)();
+            string returnMessageText = commandTable.GetValueOrDefault(command)(arguments);
             await SendMessage(returnMessageText, chatId);
 
         }
 
-        public void RegisterCommand(string command, Func<string> func)
+        public void RegisterCommand(string command, Func<string[], string> func)
         {
             if (!commandTable.ContainsKey(command))
             {

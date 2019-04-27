@@ -19,7 +19,10 @@ namespace TelegramMid
 
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json");
+                .AddJsonFile("appsettings.json")
+                .AddEnvironmentVariables("Tg_");
+                ;
+
 
             var configuration = builder.Build();
 
@@ -60,9 +63,15 @@ namespace TelegramMid
             
         }
 
-        public static string testCommand()
+        public static string testCommand(string[] arguments)
         {
-            return "this is a test command";
+
+            if (arguments != null)
+            {
+                return arguments[0];
+            }
+
+            return "No arguments";
         }
     }
 }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TelegramMid.Models
+namespace TelegramMid.Model
 {
     class MqMessage
     {

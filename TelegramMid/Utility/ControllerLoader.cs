@@ -4,18 +4,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using TelegramMid.Attributes;
+using TelegramMid.Attribute;
 using TelegramMid.Context;
 
-namespace TelegramMid
+namespace TelegramMid.Utility
 {
-    class ControllerLoader<T>
+    class ControllerLoader
     {
-        private readonly T target;
-        public ControllerLoader(T target)
-        {
-            this.target = target;
-        }
 
         private static Delegate CreateDelegate(MethodInfo methodInfo, object target)
         {
@@ -28,7 +23,7 @@ namespace TelegramMid
             return Delegate.CreateDelegate(getType(types.ToArray()), target, methodInfo.Name);
         }
 
-        public void LoadToContext(TelegramContext context)
+        public static void LoadToContext<T>(TelegramContext context, T target)
         {
             MethodInfo[] methodInfos = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 

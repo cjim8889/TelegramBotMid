@@ -9,8 +9,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using TelegramMid.Context;
 using TelegramMid.Controller;
+using TelegramMid.Model;
+using TelegramMid.Utility;
 
-namespace TelegramMid.Models
+namespace TelegramMid
 {
     class TelegramServer
     {
@@ -29,9 +31,15 @@ namespace TelegramMid.Models
 
             mqConsumer.Received += OnMqMessageReceived;
 
-            new ControllerLoader<MainController>(new MainController()).LoadToContext(telegramContext);
         }
 
+        public void AddController<T>()
+        {
+
+            var target = Activator.CreateInstance<T>();
+            ControllerLoader.LoadToContext<T>(telegramContext, target);
+
+        }
 
         private EventingBasicConsumer CreateEventConsumer()
         {

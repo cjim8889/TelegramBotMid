@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using TelegramMid.Attributes;
+using TelegramMid.Attribute;
 
 namespace TelegramMid.Controller
 {

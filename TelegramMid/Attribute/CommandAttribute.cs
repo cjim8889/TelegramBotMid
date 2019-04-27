@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace TelegramMid.Attributes
+namespace TelegramMid.Attribute
 {
-    class CommandAttribute : Attribute
+    class CommandAttribute : System.Attribute
     {
         public CommandAttribute(string commandName)
         {

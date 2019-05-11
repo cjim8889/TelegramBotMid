@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "TelegramMid": {
+      "commandName": "Project",
+      "environmentVariables": {
+      }
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

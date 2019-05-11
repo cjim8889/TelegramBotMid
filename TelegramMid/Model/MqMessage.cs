@@ -7,6 +7,6 @@ namespace TelegramMid.Model
     class MqMessage
     {
         public string Content { get; set; }
-        public List<int> Receivers { get; set; }
+        public List<long> Receivers { get; set; }
     }
 }

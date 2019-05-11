@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  telegrammid:
+    image: ${DOCKER_REGISTRY-}telegrammid
+    build:
+      context: .
+      dockerfile: TelegramMid/Dockerfile

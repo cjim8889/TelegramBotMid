@@ -4,6 +4,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,14 +32,29 @@ namespace TelegramMid
 
             mqConsumer.Received += OnMqMessageReceived;
 
+            AddControllers<IControllerBase>();
         }
 
         public void AddController<T>()
         {
-
             var target = Activator.CreateInstance<T>();
             ControllerLoader.LoadToContext<T>(telegramContext, target);
 
+        }
+
+        public void AddControllers<I>()
+        {
+            var typeNames = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
+                .Where(x => typeof(I).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
+                .Select(x => x.FullName).ToList();
+
+            foreach(var typeName in typeNames)
+            {
+                var type = Type.GetType(typeName);
+                var target = Activator.CreateInstance(type);
+
+                ControllerLoader.LoadToContext(telegramContext, type, target);
+            }
         }
 
         private EventingBasicConsumer CreateEventConsumer()
@@ -55,7 +71,7 @@ namespace TelegramMid
 
             var tasks = new List<Task>();
 
-            foreach (int receiverId in messageObj.Receivers)
+            foreach (long receiverId in messageObj.Receivers)
             {
                 tasks.Add(telegramContext.SendMessage(messageObj.Content, receiverId));
             }
@@ -65,7 +81,7 @@ namespace TelegramMid
         public void Run()
         {
             var tasks = new List<Task>();
-            tasks.Add(Task.Run(() => mqContext.Channel.BasicConsume(queue: "test", autoAck: true, consumer: mqConsumer)));
+            tasks.Add(Task.Run(() => mqContext.Channel.BasicConsume(queue: configuration.GetSection("Mq:Key").Value, autoAck: true, consumer: mqConsumer)));
             tasks.Add(Task.Run(() =>
             {
                 telegramContext.TelegramBotClient.StartReceiving();

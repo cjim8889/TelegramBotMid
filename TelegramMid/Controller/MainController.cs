@@ -5,7 +5,10 @@ using TelegramMid.Attribute;
 
 namespace TelegramMid.Controller
 {
-    class MainController
+    interface IControllerBase
+    {
+    }
+    class MainController : IControllerBase
     {
 
         public MainController()
@@ -14,10 +17,10 @@ namespace TelegramMid.Controller
         }
 
 
-        [Command("test")]
-        public string Test(string[] arguments, long chatId)
+        [Command("start")]
+        public string Start(string[] arguments, long chatId)
         {
-            return "Hello Test";
+            return $"Hi, 这里是Telegram Push Service Bot\n你的ID是: {chatId}";
         }
 
 

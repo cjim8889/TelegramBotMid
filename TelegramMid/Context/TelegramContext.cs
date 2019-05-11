@@ -17,7 +17,7 @@ namespace TelegramMid.Context
 
         public TelegramContext(IConfiguration configuration)
         {
-            TelegramBotClient = new TelegramBotClient(configuration.GetSection("Telegram:Token").Value);
+            TelegramBotClient = new TelegramBotClient(configuration.GetSection("Telegram_Token").Value);
             commandTable = new Dictionary<string, Func<string[], long, string>>();
             TelegramBotClient.OnMessage += Bot_OnMessage;
         }

@@ -23,6 +23,35 @@ namespace TelegramMid.Utility
             return Delegate.CreateDelegate(getType(types.ToArray()), target, methodInfo.Name);
         }
 
+        public static void LoadToContext(TelegramContext context, Type type, object target)
+        {
+            MethodInfo[] methodInfos = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+            LoadMethodsToContext(methodInfos, context, target);
+        }
+
+        private static void LoadMethodsToContext(MethodInfo[] methodInfos, TelegramContext context, object target)
+        {
+            if (methodInfos.Length == 0)
+            {
+                return;
+            }
+
+            foreach (MethodInfo methodInfo in methodInfos)
+            {
+                CommandAttribute attr = methodInfo.GetCustomAttribute<CommandAttribute>();
+                if (attr == null)
+                {
+                    continue;
+                }
+
+                var func = (Func<string[], long, string>)CreateDelegate(methodInfo, target);
+
+                context.RegisterCommand(attr.CommandName, func);
+                Console.WriteLine($"Command {attr.CommandName} loaded");
+            }
+        }
+
         public static void LoadToContext<T>(TelegramContext context, T target)
         {
             MethodInfo[] methodInfos = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);

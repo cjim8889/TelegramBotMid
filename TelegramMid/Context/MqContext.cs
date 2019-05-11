@@ -19,7 +19,7 @@ namespace TelegramMid.Context
             Connection = factory.CreateConnection();
             Channel = Connection.CreateModel();
 
-            Channel.QueueDeclare(queue: "test",
+            Channel.QueueDeclare(queue: configuration.GetSection("Mq:Key").Value,
                                  durable: false,
                                  exclusive: false,
                                  autoDelete: false,

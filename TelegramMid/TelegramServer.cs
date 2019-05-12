@@ -17,6 +17,8 @@ namespace TelegramMid
 {
     class TelegramServer
     {
+        //Can not have multiple dependencies with the same type signature (at the moment);
+
         private readonly IConfiguration configuration;
         private readonly MqContext mqContext;
         private readonly TelegramContext telegramContext;
@@ -29,17 +31,12 @@ namespace TelegramMid
             this.telegramContext = telegramContext;
 
             mqConsumer = CreateEventConsumer();
-
             mqConsumer.Received += OnMqMessageReceived;
-
-            AddControllers<IControllerBase>();
         }
 
         public void AddController<T>()
         {
-            var target = Activator.CreateInstance<T>();
-            ControllerLoader.LoadToContext<T>(telegramContext, target);
-
+            Loader.LoadToContext<T>(telegramContext);
         }
 
         public void AddControllers<I>()
@@ -51,9 +48,8 @@ namespace TelegramMid
             foreach(var typeName in typeNames)
             {
                 var type = Type.GetType(typeName);
-                var target = Activator.CreateInstance(type);
 
-                ControllerLoader.LoadToContext(telegramContext, type, target);
+                Loader.LoadToContext(telegramContext, type);
             }
         }
 

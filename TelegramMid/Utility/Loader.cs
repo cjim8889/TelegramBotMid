@@ -9,7 +9,7 @@ using TelegramMid.Context;
 
 namespace TelegramMid.Utility
 {
-    class ControllerLoader
+    class Loader
     {
 
         private static Delegate CreateDelegate(MethodInfo methodInfo, object target)
@@ -23,39 +23,27 @@ namespace TelegramMid.Utility
             return Delegate.CreateDelegate(getType(types.ToArray()), target, methodInfo.Name);
         }
 
-        public static void LoadToContext(TelegramContext context, Type type, object target)
+        public static void LoadToContext(TelegramContext context, Type type)
         {
             MethodInfo[] methodInfos = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+            var target = Factory.InstanceInstantiate(type);
 
             LoadMethodsToContext(methodInfos, context, target);
         }
 
-        private static void LoadMethodsToContext(MethodInfo[] methodInfos, TelegramContext context, object target)
-        {
-            if (methodInfos.Length == 0)
-            {
-                return;
-            }
-
-            foreach (MethodInfo methodInfo in methodInfos)
-            {
-                CommandAttribute attr = methodInfo.GetCustomAttribute<CommandAttribute>();
-                if (attr == null)
-                {
-                    continue;
-                }
-
-                var func = (Func<string[], long, string>)CreateDelegate(methodInfo, target);
-
-                context.RegisterCommand(attr.CommandName, func);
-                Console.WriteLine($"Command {attr.CommandName} loaded");
-            }
-        }
-
-        public static void LoadToContext<T>(TelegramContext context, T target)
+        public static void LoadToContext<T>(TelegramContext context)
         {
             MethodInfo[] methodInfos = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
+            var target = Factory.InstanceInstantiate<T>();
+
+            LoadMethodsToContext(methodInfos, context, target);
+        }
+
+
+        private static void LoadMethodsToContext(MethodInfo[] methodInfos, TelegramContext context, object target)
+        {
             if (methodInfos.Length == 0)
             {
                 return;

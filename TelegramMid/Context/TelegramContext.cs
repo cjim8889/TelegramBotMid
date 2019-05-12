@@ -77,7 +77,7 @@ namespace TelegramMid.Context
             }
         }
 
-        public async Task SendMessage(String message, long chatId)
+        public async Task SendMessage(string message, long chatId)
         {
             try
             {
@@ -90,7 +90,7 @@ namespace TelegramMid.Context
             }
             catch(ChatNotFoundException e)
             {
-                Console.WriteLine($"Fail to find the chatId {chatId}");
+                Console.WriteLine($"Fail to find the chatId {chatId} {e.Message}");
             }           
         }
 

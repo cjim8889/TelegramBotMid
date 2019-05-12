@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using TelegramMid.Context;
 using TelegramMid.Controller;
+using TelegramMid.Utility;
 
 namespace TelegramMid
 {
@@ -19,22 +20,16 @@ namespace TelegramMid
                 .AddJsonFile("appsettings.json")
                 .AddEnvironmentVariables();
 
-
             var configuration = builder.Build();
 
-            var mqContext = new MqContext(configuration);
-            var telegramContext = new TelegramContext(configuration);
+            Factory.AddDependency<IConfiguration>(configuration);
+            Factory.AddDependency<TelegramContext>();
+            Factory.AddDependency<MqContext>();
 
-
-            var server = new TelegramServer(configuration, mqContext, telegramContext);
+            var server = Factory.InstantiateServer();
 
             server.Run();
 
-
-
-
-
         }
-
     }
 }

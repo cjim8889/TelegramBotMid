@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using TelegramMid.Attribute;
+using TelegramMid.Context;
 
 namespace TelegramMid.Controller
 {
@@ -11,16 +12,15 @@ namespace TelegramMid.Controller
     class MainController : IControllerBase
     {
 
-        public MainController()
+        public MainController(TelegramContext telegramContext)
         {
-
         }
 
 
         [Command("start")]
         public string Start(string[] arguments, long chatId)
         {
-            return $"Hi, 这里是Telegram Push Service Bot\n你的ID是: {chatId}";
+            return $"Hi, 这里是Telegram Push Service Bot\n你的ID是: {chatId}\n注册服务请访问https://push.oxifus.com\n\n\n";
         }
 
 

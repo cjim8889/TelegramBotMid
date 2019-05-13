@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using Telegram.Bot.Types;
 using TelegramMid.Context;
+using TelegramMid.Model;
 using TelegramMid.Utility;
 
 namespace TelegramMid.Core
@@ -31,41 +33,63 @@ namespace TelegramMid.Core
         }
 
         //Always dispatch to the first method that fits
-        //Controllers are transient
+        //Controllers are singleton
         //Pattern matching to be implemented
         public void Dispatch(Message message)
         {
-            var method = SelectProcedure(message);
+            var (method, parameters) = SelectProcedure(message);
             if (method == null)
             {
                 return;
             }
 
+            var paramsLength = method.MethodInfo.GetParameters().Length;
+
+            switch (paramsLength)
+            {
+                case 0:
+                    parameters = new object[0];
+                    break;
+                case 1:
+                    parameters = new object[] { parameters[0] };
+                    break;
+            }
+            
+
             var targetControllerType = method.MethodInfo.DeclaringType;
 
-            var target = Factory.InstanceInstantiate(targetControllerType);
+            var target = Factory.GetInstance(targetControllerType);
 
-            method.MethodInfo.Invoke(target, new[] { message });
+            var response = (AbstractResponse)method.MethodInfo.Invoke(target, parameters);
+
+            //Auto append chatid if null
+            response.ChatId = response.ChatId == 0 ? message.Chat.Id : response.ChatId;
+
+
+            Task.Run(() => { response.SendResponse(telegramContext); });
         }
 
-        private Method SelectProcedure(Message message)
+        private (Method, object[]) SelectProcedure(Message message)
         {
-            var type = (DispatcherType) message.Type;
+            var type = (DispatcherType)message.Type;
 
-            if (type != DispatcherType.Text)
+            if (type == DispatcherType.Text)
             {
-                return methods.Where(m => m.Type == type || (m.Type == DispatcherType.Any && !m.IsCommand)).FirstOrDefault();
+                if (message.Text.StartsWith('/'))
+                {
+                    var messageBody = message.Text.Substring(1);
+                    var messageSplit = messageBody.Split(' ', 2);
+                    object[] commandParams = new string[0];
+                    if (messageSplit.Length > 1)
+                    {
+                        commandParams = messageSplit[1].Split(' ');
+                    }
+
+                    return (methods.Where(m => m.Command == messageSplit[0]).FirstOrDefault(), new object[] { message, commandParams });
+                }
             }
 
-            if (message.Text.StartsWith('/'))
-            {
-                var messageBody = message.Text.Substring(1);
-                var messageSplit = messageBody.Split(' ', 2);
-
-                return methods.Where(m => m.IsCommand && m.Command == messageSplit[0]).FirstOrDefault();
-            }
-
-            return methods.Where(m => m.Type == type && !m.IsCommand).FirstOrDefault();
+            return (methods.Where(m => (m.Type == type || m.Type == DispatcherType.Any) && !m.IsCommand).FirstOrDefault(), new[] { message });
         }
         public void LoadInterface<I>()
         {
@@ -77,6 +101,7 @@ namespace TelegramMid.Core
             {
                 var type = Type.GetType(typeName);
 
+                Factory.AddDependency(type);
                 Loader.LoadToList(methods, type);
             }
         }

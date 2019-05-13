@@ -25,20 +25,15 @@ namespace TelegramMid
         private readonly EventingBasicConsumer mqConsumer;
         private readonly Dispatcher dispatcher;
 
-        public TelegramServer(IConfiguration configuration, TelegramContext telegramContext, Dispatcher dispatcher)
+        public TelegramServer(IConfiguration configuration, TelegramContext telegramContext, Dispatcher dispatcher, MqContext mqContext)
         {
             this.configuration = configuration;
             this.telegramContext = telegramContext;
             this.dispatcher = dispatcher;
-            //this.mqContext = mqContext;
-            //mqConsumer = CreateEventConsumer();
-            //mqConsumer.Received += OnMqMessageReceived;
+            this.mqContext = mqContext;
+            mqConsumer = CreateEventConsumer();
+            mqConsumer.Received += OnMqMessageReceived;
         }
-
-        //public void AddController<T>()
-        //{
-        //    Loader.LoadToContext<T>(telegramContext);
-        //}
 
         public void AddControllers<I>()
         {
@@ -63,13 +58,14 @@ namespace TelegramMid
             {
                 tasks.Add(telegramContext.SendMessage(messageObj.Content, receiverId));
             }
+
             Task.WaitAll(tasks.ToArray());
         }
 
         public void Run()
         {
             var tasks = new List<Task>();
-            //tasks.Add(Task.Run(() => mqContext.Channel.BasicConsume(queue: configuration.GetSection("Mq:Key").Value, autoAck: true, consumer: mqConsumer)));
+            tasks.Add(Task.Run(() => mqContext.Channel.BasicConsume(queue: configuration.GetSection("Mq:Key").Value, autoAck: true, consumer: mqConsumer)));
             tasks.Add(Task.Run(() =>
             {
                 telegramContext.TelegramBotClient.StartReceiving();

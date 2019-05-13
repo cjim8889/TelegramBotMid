@@ -21,7 +21,7 @@ namespace TelegramMid
             Factory.AddDependency<IConfiguration>(configuration);
             Factory.AddDependency<TelegramContext>();
             Factory.AddDependency<Dispatcher>();
-            //Factory.AddDependency<MqContext>();
+            Factory.AddDependency<MqContext>();
 
             var server = Factory.InstantiateServer();
 

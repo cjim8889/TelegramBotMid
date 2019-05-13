@@ -49,38 +49,5 @@ namespace TelegramMid.Utility
             method.Type = typeAttribute == null ? DispatcherType.Any : typeAttribute.Type;
 
         }
-
-        public static void LoadToContext<T>(TelegramContext context)
-        {
-            MethodInfo[] methodInfos = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-            var target = Factory.InstanceInstantiate<T>();
-
-            LoadMethodsToContext(methodInfos, context, target);
-        }
-
-
-        private static void LoadMethodsToContext(MethodInfo[] methodInfos, TelegramContext context, object target)
-        {
-            if (methodInfos.Length == 0)
-            {
-                return;
-            }
-
-            foreach (MethodInfo methodInfo in methodInfos)
-            {
-                CommandAttribute attr = methodInfo.GetCustomAttribute<CommandAttribute>();
-                if (attr == null)
-                {
-                    continue;
-                }
-
-                var func = CreateDelegate(methodInfo, target);
-
-                //context.RegisterCommand(attr.CommandName, func);
-                Console.WriteLine($"Command Loaded: {attr.CommandName}");
-            }
-        }
-
     }
 }

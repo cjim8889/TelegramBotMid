@@ -5,6 +5,7 @@ using System.Text;
 using Telegram.Bot.Types;
 using TelegramMid.Attribute;
 using TelegramMid.Context;
+using TelegramMid.Model;
 
 namespace TelegramMid.Controller
 {
@@ -22,22 +23,22 @@ namespace TelegramMid.Controller
         }
 
         [Command("start")]
-        public string Start(Message message)
+        public IResponse Start(Message message)
         {
-            return $"Hi, 这里是Telegram Push Service Bot\n你的ID是: {message.From.Id}\n注册服务请访问https://push.oxifus.com\n\n\n";
+            return ResponseFactory.NewTextResponse($"Hi, 这里是Telegram Push Service Bot\n你的ID是: {message.From.Id}\n注册服务请访问https://push.oxifus.com\n\n\n");
         }
 
 
         [Command("wocao")]
-        public string f(Message message)
+        public IResponse wocao()
         {
-            return "Cao ni ma";
+            return ResponseFactory.NewTextResponse("Mei mao bing");
         }
 
         [Command("version")]
-        public async void Version(Message message)
+        public IResponse Version()
         {
-            await telegramContext.SendMessage("v0.0.1", message.Chat.Id);
+            return ResponseFactory.NewTextResponse($"v{configuration.GetSection("Version").Value}");
         }
     }
 }

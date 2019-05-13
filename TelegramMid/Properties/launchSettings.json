@@ -1,10 +1,7 @@
 {
   "profiles": {
     "TelegramMid": {
-      "commandName": "Project",
-      "environmentVariables": {
-        "Telegram_Token": "719125238:AAFO-STXUUFF6s6A2Kbzj1LbSGk7Pb4vDx4"
-      }
+      "commandName": "Project"
     },
     "Docker": {
       "commandName": "Docker"

@@ -7,6 +7,7 @@ namespace TelegramMid.Attribute
 {
     class CommandAttribute : System.Attribute
     {
+        //Controller method with command attribute takes one extra nullable parameter.
         public CommandAttribute(string commandName)
         {
             CommandName = commandName;

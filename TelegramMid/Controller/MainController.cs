@@ -1,8 +1,11 @@
-﻿using System;
+﻿using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Text;
+using Telegram.Bot.Types;
 using TelegramMid.Attribute;
 using TelegramMid.Context;
+using TelegramMid.Model;
 
 namespace TelegramMid.Controller
 {
@@ -11,23 +14,31 @@ namespace TelegramMid.Controller
     }
     class MainController : IControllerBase
     {
-
-        public MainController(TelegramContext telegramContext)
+        private readonly IConfiguration configuration;
+        private readonly TelegramContext telegramContext;
+        public MainController(TelegramContext telegramContext, IConfiguration configuration)
         {
+            this.configuration = configuration;
+            this.telegramContext = telegramContext;
         }
 
-
         [Command("start")]
-        public string Start(string[] arguments, long chatId)
+        public IResponse Start(Message message)
         {
-            return $"Hi, 这里是Telegram Push Service Bot\n你的ID是: {chatId}\n注册服务请访问https://push.oxifus.com\n\n\n";
+            return ResponseFactory.NewTextResponse($"Hi, 这里是Telegram Push Service Bot\n你的ID是: {message.From.Id}\n注册服务请访问https://push.oxifus.com\n\n\n");
         }
 
 
         [Command("wocao")]
-        public string f(string[] arguments, long chatId)
+        public IResponse wocao()
         {
-            return "Cao ni ma";
+            return ResponseFactory.NewTextResponse("Mei mao bing");
+        }
+
+        [Command("version")]
+        public IResponse Version()
+        {
+            return ResponseFactory.NewTextResponse($"v{configuration.GetSection("Version").Value}");
         }
     }
 }

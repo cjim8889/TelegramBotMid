@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 
 namespace TelegramMid.Context
 {
@@ -20,11 +17,10 @@ namespace TelegramMid.Context
             Channel = Connection.CreateModel();
 
             Channel.QueueDeclare(queue: configuration.GetSection("Mq:Key").Value,
-                                 durable: false,
-                                 exclusive: false,
-                                 autoDelete: false,
-                                 arguments: null);
-
+                                    durable: false,
+                                    exclusive: false,
+                                    autoDelete: false,
+                                    arguments: null);
         }
 
         ~MqContext()

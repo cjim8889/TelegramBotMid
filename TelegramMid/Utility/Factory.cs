@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using TelegramMid.Controller;
 
 namespace TelegramMid.Utility
 {
+    class MissingDependencyException : Exception
+    {
+    }
     class Factory
     {
         public static Dictionary<string, object> dependencyDict = new Dictionary<string, object>();
@@ -20,6 +22,38 @@ namespace TelegramMid.Utility
             dependencyDict.Add(typeof(T).FullName, InstanceInstantiate<T>());
         }
 
+        public static void AddDependency(Type type)
+        {
+            dependencyDict.Add(type.FullName, InstanceInstantiate(type));
+        }
+
+        public static object GetInstance<T>()
+        {
+            return GetInstance(typeof(T));
+        }
+
+        public static object GetInstance(Type type)
+        {
+            //Get Object From Dependency Dict
+            if (dependencyDict.ContainsKey(type.FullName))
+            {
+                return dependencyDict.GetValueOrDefault(type.FullName);
+            }
+
+            return null;
+        }
+
+        public static object GetInstanceOrInstantiate(Type type)
+        {
+            var obj = GetInstance(type);
+            if (obj == null)
+            {
+                return InstanceInstantiate(type);
+            }
+
+            return obj;
+        }
+
         public static object InstanceInstantiate<T>()
         {
             return InstanceInstantiate(typeof(T));
@@ -27,7 +61,7 @@ namespace TelegramMid.Utility
 
         public static TelegramServer InstantiateServer()
         {
-            var server = (TelegramServer)InstanceInstantiate<TelegramServer>();
+            var server = (TelegramServer) InstanceInstantiate<TelegramServer>();
 
             server.AddControllers<IControllerBase>();
 
@@ -59,7 +93,7 @@ namespace TelegramMid.Utility
             {
                 if (!dependencyDict.ContainsKey(paramInfo.ParameterType.FullName))
                 {
-                    throw new MissingMemberException();
+                    throw new MissingDependencyException();
                 }
 
                 tempList.Add(dependencyDict.GetValueOrDefault(paramInfo.ParameterType.FullName));

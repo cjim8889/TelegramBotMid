@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using TelegramMid.Attribute;
 using TelegramMid.Context;
+using TelegramMid.Core;
 
 namespace TelegramMid.Utility
 {
@@ -23,46 +23,31 @@ namespace TelegramMid.Utility
             return Delegate.CreateDelegate(getType(types.ToArray()), target, methodInfo.Name);
         }
 
-        public static void LoadToContext(TelegramContext context, Type type)
+        public static void LoadToList(IList<Method> list, Type type)
         {
             MethodInfo[] methodInfos = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
-            var target = Factory.InstanceInstantiate(type);
-
-            LoadMethodsToContext(methodInfos, context, target);
-        }
-
-        public static void LoadToContext<T>(TelegramContext context)
-        {
-            MethodInfo[] methodInfos = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-
-            var target = Factory.InstanceInstantiate<T>();
-
-            LoadMethodsToContext(methodInfos, context, target);
-        }
-
-
-        private static void LoadMethodsToContext(MethodInfo[] methodInfos, TelegramContext context, object target)
-        {
-            if (methodInfos.Length == 0)
+            foreach (var methodInfo in methodInfos)
             {
-                return;
-            }
+                var method = new Method() { MethodInfo=methodInfo };
+                InjectAttributeInfo(methodInfo, method);
 
-            foreach (MethodInfo methodInfo in methodInfos)
-            {
-                CommandAttribute attr = methodInfo.GetCustomAttribute<CommandAttribute>();
-                if (attr == null)
-                {
-                    continue;
-                }
-
-                var func = (Func<string[], long, string>)CreateDelegate(methodInfo, target);
-
-                context.RegisterCommand(attr.CommandName, func);
-                Console.WriteLine($"Command {attr.CommandName} loaded");
+                list.Add(method);
             }
         }
 
+        public static void InjectAttributeInfo(MethodInfo methodInfo, Method method)
+        {
+            CommandAttribute commandAttribute = methodInfo.GetCustomAttribute<CommandAttribute>();
+            if (commandAttribute != null)
+            {
+                method.Command = commandAttribute.CommandName;
+                method.IsCommand = true;
+            }
+
+            TypeAttribute typeAttribute = methodInfo.GetCustomAttribute<TypeAttribute>();
+            method.Type = typeAttribute == null ? DispatcherType.Any : typeAttribute.Type;
+
+        }
     }
 }

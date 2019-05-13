@@ -1,11 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
+﻿using System.IO;
 using Microsoft.Extensions.Configuration;
 using TelegramMid.Context;
-using TelegramMid.Controller;
+using TelegramMid.Core;
 using TelegramMid.Utility;
 
 namespace TelegramMid
@@ -24,6 +20,7 @@ namespace TelegramMid
 
             Factory.AddDependency<IConfiguration>(configuration);
             Factory.AddDependency<TelegramContext>();
+            Factory.AddDependency<Dispatcher>();
             Factory.AddDependency<MqContext>();
 
             var server = Factory.InstantiateServer();

@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TelegramMid.Context;
-using TelegramMid.Controller;
+using TelegramMid.Core;
 using TelegramMid.Model;
 using TelegramMid.Utility;
 
@@ -23,34 +23,26 @@ namespace TelegramMid
         private readonly MqContext mqContext;
         private readonly TelegramContext telegramContext;
         private readonly EventingBasicConsumer mqConsumer;
+        private readonly Dispatcher dispatcher;
 
-        public TelegramServer(IConfiguration configuration, MqContext mqContext, TelegramContext telegramContext)
+        public TelegramServer(IConfiguration configuration, TelegramContext telegramContext, Dispatcher dispatcher)
         {
             this.configuration = configuration;
-            this.mqContext = mqContext;
             this.telegramContext = telegramContext;
-
-            mqConsumer = CreateEventConsumer();
-            mqConsumer.Received += OnMqMessageReceived;
+            this.dispatcher = dispatcher;
+            //this.mqContext = mqContext;
+            //mqConsumer = CreateEventConsumer();
+            //mqConsumer.Received += OnMqMessageReceived;
         }
 
-        public void AddController<T>()
-        {
-            Loader.LoadToContext<T>(telegramContext);
-        }
+        //public void AddController<T>()
+        //{
+        //    Loader.LoadToContext<T>(telegramContext);
+        //}
 
         public void AddControllers<I>()
         {
-            var typeNames = AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes())
-                .Where(x => typeof(I).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract)
-                .Select(x => x.FullName).ToList();
-
-            foreach(var typeName in typeNames)
-            {
-                var type = Type.GetType(typeName);
-
-                Loader.LoadToContext(telegramContext, type);
-            }
+            dispatcher.LoadInterface<I>();
         }
 
         private EventingBasicConsumer CreateEventConsumer()
@@ -77,7 +69,7 @@ namespace TelegramMid
         public void Run()
         {
             var tasks = new List<Task>();
-            tasks.Add(Task.Run(() => mqContext.Channel.BasicConsume(queue: configuration.GetSection("Mq:Key").Value, autoAck: true, consumer: mqConsumer)));
+            //tasks.Add(Task.Run(() => mqContext.Channel.BasicConsume(queue: configuration.GetSection("Mq:Key").Value, autoAck: true, consumer: mqConsumer)));
             tasks.Add(Task.Run(() =>
             {
                 telegramContext.TelegramBotClient.StartReceiving();

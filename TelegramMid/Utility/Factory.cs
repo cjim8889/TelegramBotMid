@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using TelegramMid.Controller;
 
 namespace TelegramMid.Utility
 {
+    class MissingDependencyException : Exception
+    {
+    }
     class Factory
     {
         public static Dictionary<string, object> dependencyDict = new Dictionary<string, object>();
@@ -59,7 +61,7 @@ namespace TelegramMid.Utility
             {
                 if (!dependencyDict.ContainsKey(paramInfo.ParameterType.FullName))
                 {
-                    throw new MissingMemberException();
+                    throw new MissingDependencyException();
                 }
 
                 tempList.Add(dependencyDict.GetValueOrDefault(paramInfo.ParameterType.FullName));

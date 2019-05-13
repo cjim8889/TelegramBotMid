@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using TelegramMid.Attribute;
 using TelegramMid.Context;
+using TelegramMid.Core;
 
 namespace TelegramMid.Utility
 {
@@ -23,13 +23,31 @@ namespace TelegramMid.Utility
             return Delegate.CreateDelegate(getType(types.ToArray()), target, methodInfo.Name);
         }
 
-        public static void LoadToContext(TelegramContext context, Type type)
+        public static void LoadToList(IList<Method> list, Type type)
         {
             MethodInfo[] methodInfos = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
-            var target = Factory.InstanceInstantiate(type);
+            foreach (var methodInfo in methodInfos)
+            {
+                var method = new Method() { MethodInfo=methodInfo };
+                InjectAttributeInfo(methodInfo, method);
 
-            LoadMethodsToContext(methodInfos, context, target);
+                list.Add(method);
+            }
+        }
+
+        public static void InjectAttributeInfo(MethodInfo methodInfo, Method method)
+        {
+            CommandAttribute commandAttribute = methodInfo.GetCustomAttribute<CommandAttribute>();
+            if (commandAttribute != null)
+            {
+                method.Command = commandAttribute.CommandName;
+                method.IsCommand = true;
+            }
+
+            TypeAttribute typeAttribute = methodInfo.GetCustomAttribute<TypeAttribute>();
+            method.Type = typeAttribute == null ? DispatcherType.Any : typeAttribute.Type;
+
         }
 
         public static void LoadToContext<T>(TelegramContext context)
@@ -57,10 +75,10 @@ namespace TelegramMid.Utility
                     continue;
                 }
 
-                var func = (Func<string[], long, string>)CreateDelegate(methodInfo, target);
+                var func = CreateDelegate(methodInfo, target);
 
-                context.RegisterCommand(attr.CommandName, func);
-                Console.WriteLine($"Command {attr.CommandName} loaded");
+                //context.RegisterCommand(attr.CommandName, func);
+                Console.WriteLine($"Command Loaded: {attr.CommandName}");
             }
         }
 

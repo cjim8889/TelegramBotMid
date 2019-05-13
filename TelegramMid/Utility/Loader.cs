@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using TelegramMid.Attribute;
-using TelegramMid.Context;
 using TelegramMid.Core;
 
 namespace TelegramMid.Utility
